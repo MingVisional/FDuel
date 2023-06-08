@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+</head>
+<style>
+    b {
+        color: white;
+    }
+    .UR {
+        background: linear-gradient(to bottom right, blue, pink);
+    }
+    .SR {
+        background: orange;
+    }
+    .R {
+        background: blue;
+    }
+    .N {
+        background: grey;
+    }
+    a {
+        text-decoration: none;
+        color: #0071e3;
+    }
+    button{
+        cursor: pointer;
+        display: inline-block;
+        text-align: center;
+        white-space: nowrap;
+        background: #0071e3;
+        color: #fff;
+        border-radius: 980px;
+        font-size: 12px;
+        line-height: 1.33337;
+        font-weight: 400;
+        letter-spacing: -.01em;
+        font-family: "SF Pro Text","SF Pro Icons","Helvetica Neue","Helvetica","Arial",sans-serif;
+        min-width: 23px;
+        padding-left: 11px;
+        padding-right: 11px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    #cards-div {
+        white-space: nowrap;
+        overflow-x: auto;
+        display:flex;
+    }
+    .table {
+        width: 30%;
+        margin-left: 1%;
+        flex-shrink:0;
+    }
+    .cards-table {
+        width: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        text-align: center;
+    }
+    .cards-table td, #cards-table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    .cards-table tr:nth-child(even){background-color: #f2f2f2;}
+    .cards-table tr:hover {background-color: #ddd;}
+    .cards-table th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        background-color: #4CAF50;
+        color: white;
+    }
+</style>
+<body>
+    <button id="black-button" onclick="get_black_cards()">查询限制表</button>
+    <button id="white-button" onclick="get_white_cards()">查询白名单</button>
+    <input id="keyword" placeholder="卡名搜索">
+    <input id="max-col" placeholder="单列最多显示数量" value=20>
+    <hr>
+    <div id="cards-div">
+        <p>没有可用卡牌</p>
+    </div>
+</body>
+<script>
+    function clear_table() {
+        var parent = document.getElementById("cards-div");
+        while (parent.firstChild) {
+            parent.removeChild(parent.firstChild);
+        }
+    }
+    function get_black_cards(){
+        get_cards("black");
+    }
+    function get_white_cards(){
+        get_cards("white");
+    }
+    function create_table(data) {
+        var max_col = document.getElementById("max-col").value;
+        if (max_col <= 0) {
+            return;
+        }
+        var parent = document.getElementById("cards-div");
+        if (data.cards.length == 0) {
+            parent.innerHTML = `<p>没有可用卡牌</p>`;
+            return;
+        }
+        var newDiv = null;
+        var newTable = null;
+        for (let i = 0; i < data.cards.length; i++ ) {
+            if (i % max_col == 0) {
+                newDiv = document.createElement("div");
+                newDiv.setAttribute("class", "table");
+                newTable = document.createElement("table");
+                newTable.setAttribute("class", "cards-table");
+                newTable.innerHTML = "<tr><th>卡名</th><th>数量</th></tr>"
+                newDiv.appendChild(newTable);
+                parent.appendChild(newDiv);
+            }
+            newTable.innerHTML += `<tr><td><b class="${data.cards[i].rare}">${data.cards[i].rare}</b><a href='https://ygocdb.com/?search=${data.cards[i].name}' target="_blank">${data.cards[i].name}</a></td><td>${data.cards[i].allowed_num}</td></tr>`
+        }
+    }
+    function get_cards(t) {
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+		    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                clear_table();
+                create_table(JSON.parse(xmlhttp.responseText));
+            }
+        }
+        var url = "/api/"+t;
+        var keyword = document.getElementById("keyword").value;
+        if (keyword != "") {
+            url += "?keyword=" + keyword
+        }
+        xmlhttp.open("GET", url, true);
+        xmlhttp.send();
+    }
+</script>
+</html>
